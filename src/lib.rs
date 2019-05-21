@@ -111,7 +111,7 @@ struct BinaryTreeNode<T> {
     left: BinaryTreeLink<T>,
 }
 
-impl<T> BinaryTree<T> {
+impl<T: PartialOrd + Display> BinaryTree<T> {
     pub fn new() -> Self {
         BinaryTree { head: None }
     }
@@ -121,7 +121,30 @@ impl<T> BinaryTree<T> {
     }
 
     pub fn push(&mut self, value: T) {
-        panic!("Not implemented!")
+        match &mut self.head {
+            None => {
+                self.head.take();
+                self.head = Some(BinaryTree::generate_node(value))
+            },
+            Some(bst_node) => BinaryTree::insert(bst_node, value),
+        }
+        
+    }
+
+    fn insert(node: &mut BinaryTreeNode<T>, value: T) {
+        if node.value > value {
+            match &mut node.left {
+                None => node.left = Some(BinaryTree::generate_node(value)),
+                Some(bst_node) => BinaryTree::insert(bst_node, value),
+            }
+        }
+        else if node.value < value {
+            match &mut node.right {
+                None => node.right = Some(BinaryTree::generate_node(value)),
+                Some(bst_node) => BinaryTree::insert(bst_node, value),
+            }
+        }
+        else { node.count += 1; }
     }
 
     pub fn min(&self) -> Result<&T, NullError> {
@@ -137,12 +160,21 @@ impl<T> BinaryTree<T> {
             Some(left_bst_node) => BinaryTree::sub_min(left_bst_node),
         }
     }
-}
 
+    fn generate_node(value: T) -> Box<BinaryTreeNode<T>> {
+        Box::new(BinaryTreeNode {
+            value: value,
+            count: 0,
+            right: None,
+            left: None,
+        })
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use crate::LinkedList;
+    use crate::BinaryTree;
 
     #[test]
     fn push_value_to_list() {
@@ -171,5 +203,16 @@ mod tests {
         let mut list_mut_iter = list.iter_mut();
         assert_eq!(list_mut_iter.next(), Some(&mut -4));
         assert_eq!(list_mut_iter.next(), Some(&mut 32));
+    }
+
+    #[test]
+    fn find_min_value_in_bst() {
+        let mut bst = BinaryTree::new();
+        bst.push(5); bst.push(6); bst.push(17); bst.push(10); bst.push(2);
+
+        match bst.min() {
+            Ok(min) => assert_eq!(min, &2),
+            Err(err) => panic!("My Binary Search Tree doesn't work =(, {}", err) 
+        }
     }
 }
