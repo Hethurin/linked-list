@@ -2,6 +2,8 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Debug;
+use compare::{Compare, natural};
+use std::cmp::Ordering::{Less, Equal, Greater};
 
 pub struct NullError;
 
@@ -111,7 +113,7 @@ struct BinaryTreeNode<T> {
     left: BinaryTreeLink<T>,
 }
 
-impl<T: PartialOrd + Display> BinaryTree<T> {
+impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
     pub fn new() -> Self {
         BinaryTree { head: None }
     }
@@ -148,16 +150,47 @@ impl<T: PartialOrd + Display> BinaryTree<T> {
     }
 
     pub fn min(&self) -> Result<&T, NullError> {
+        let left_min: &T;
+        let right_min: &T;
+        
         match &self.head {
             None => Err(NullError{}),
-            Some(bst_node) => BinaryTree::sub_min(&bst_node), 
+            Some(bst_node) => {
+                left_min = BinaryTree::sub_min(&bst_node.left, &bst_node.value).unwrap();
+                right_min = BinaryTree::sub_min(&bst_node.right, &bst_node.value).unwrap();
+
+                let cmp = natural();
+
+                match cmp.compare(left_min, right_min) {
+                    Less => Ok(left_min),
+                    Equal => Ok(left_min),
+                    Greater => Ok(right_min),
+                }
+            }, 
         }
     }
 
-    fn sub_min(start: &BinaryTreeNode<T>) -> Result<&T, NullError> {
-        match &start.left { 
-            None => Ok(&start.value),
-            Some(left_bst_node) => BinaryTree::sub_min(left_bst_node),
+    fn sub_min<'a>(head: &'a BinaryTreeLink<T>, min: &'a T) -> Result<&'a T, NullError> {
+        let left_min: &T;
+        let right_min: &T;
+        
+        match &head { 
+            None => Ok(&min),
+            Some(bst_node) => {
+                if &bst_node.value < min { 
+                    left_min = BinaryTree::sub_min(&bst_node.left, &bst_node.value).unwrap();
+                    right_min = BinaryTree::sub_min(&bst_node.right, &bst_node.value).unwrap();
+
+                    let cmp = natural();
+
+                    match cmp.compare(left_min, right_min) {
+                        Less => Ok(left_min),
+                        Equal => Ok(left_min),
+                        Greater => Ok(right_min),
+                    } 
+                }
+                else { Ok(&min) }
+            },
         }
     }
 
@@ -212,7 +245,7 @@ mod tests {
 
         match bst.min() {
             Ok(min) => assert_eq!(min, &2),
-            Err(err) => panic!("My Binary Search Tree doesn't work =(, {}", err) 
+            Err(err) => panic!("Min search not working, {}", err) 
         }
     }
 }
