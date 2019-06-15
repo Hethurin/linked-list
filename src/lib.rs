@@ -150,23 +150,9 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
     }
 
     pub fn min(&self) -> Result<&T, NullError> {
-        let left_min: &T;
-        let right_min: &T;
-        
         match &self.head {
             None => Err(NullError{}),
-            Some(bst_node) => {
-                left_min = BinaryTree::sub_min(&bst_node.left, &bst_node.value).unwrap();
-                right_min = BinaryTree::sub_min(&bst_node.right, &bst_node.value).unwrap();
-
-                let cmp = natural();
-
-                match cmp.compare(left_min, right_min) {
-                    Less => Ok(left_min),
-                    Equal => Ok(left_min),
-                    Greater => Ok(right_min),
-                }
-            }, 
+            Some(bst_node) => BinaryTree::sub_min(&self.head, &bst_node.value),
         }
     }
 
@@ -177,7 +163,7 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
         match &head { 
             None => Ok(&min),
             Some(bst_node) => {
-                if &bst_node.value < min { 
+                if &bst_node.value <= min { 
                     left_min = BinaryTree::sub_min(&bst_node.left, &bst_node.value).unwrap();
                     right_min = BinaryTree::sub_min(&bst_node.right, &bst_node.value).unwrap();
 
@@ -191,6 +177,30 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
                 }
                 else { Ok(&min) }
             },
+        }
+    }
+
+    fn sub_min_with_limit<'a>(head: &'a BinaryTreeLink<T>, min: &'a T, bottom_limit: &T) -> Result<&'a T, NullError> {
+        let left_min: &T;
+        let right_min: &T;
+        
+        match &head { 
+            None => Ok(&min),
+            Some(bst_node) => {
+                if &bst_node.value > bottom_limit { 
+                    left_min = BinaryTree::sub_min_with_limit(&bst_node.left, &bst_node.value, bottom_limit).unwrap();
+                    right_min = BinaryTree::sub_min_with_limit(&bst_node.right, &bst_node.value, bottom_limit).unwrap();
+
+                    let cmp = natural();
+
+                    match cmp.compare(left_min, right_min) {
+                        Less => Ok(left_min),
+                        Equal => Ok(left_min),
+                        Greater => Ok(right_min),
+                    } 
+                }
+                else {  BinaryTree::sub_min_with_limit(&bst_node.right, min, bottom_limit) }
+            }
         }
     }
 
@@ -245,7 +255,32 @@ mod tests {
 
         match bst.min() {
             Ok(min) => assert_eq!(min, &2),
-            Err(err) => panic!("Min search not working, {}", err) 
+            Err(err) => panic!("Min search not working, {}", err),
+        }
+    }
+
+    //remove later
+    #[test]
+    fn find_next_min_value_in_bst() {
+        let mut bst = BinaryTree::new();
+        bst.push(5); bst.push(6); bst.push(17); bst.push(10); bst.push(2);
+
+        match BinaryTree::sub_min_with_limit(&bst.head, &5, &5) {
+            Ok(min) => assert_eq!(min, &6),
+            Err(err) => panic!("Next min value search is not working, {}", err),
+        }
+    }
+
+    #[test]
+    fn find_min_value_in_bst_complex() {
+        let mut bst = BinaryTree::new();
+        bst.push(20); bst.push(15); bst.push(17); bst.push(16); bst.push(19);
+        bst.push(9); bst.push(12); bst.push(10); bst.push(6); bst.push(5);
+        bst.push(21); bst.push(25); bst.push(23); bst.push(28); bst.push(40);
+
+        match BinaryTree::sub_min_with_limit(&bst.head, &19, &19) {
+            Ok(min) => assert_eq!(min, &20),
+            Err(err) => panic!("Next min value search is not working, {}", err),
         }
     }
 }
