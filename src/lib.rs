@@ -39,6 +39,13 @@ impl<T> LinkedList<T> {
         LinkedList { head: None }
     }
 
+    pub fn is_empty(&self) -> bool {
+        match &self.head {
+            Some(node) => false,
+            None => true,
+        }
+    }
+
     pub fn push(&mut self, value: T) {
         let new_node = Box::new(Node {
             value: value,
