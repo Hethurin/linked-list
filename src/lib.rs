@@ -113,6 +113,7 @@ pub struct BinaryTree<T> {
 
 type BinaryTreeLink<T> = Option<Box<BinaryTreeNode<T>>>;
 
+//Currently designed to store a small number of elements only
 struct BinaryTreeNode<T> {
     value: T,
     count: usize,
@@ -120,7 +121,7 @@ struct BinaryTreeNode<T> {
     left: BinaryTreeLink<T>,
 }
 
-impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
+impl<T: PartialOrd + Ord> BinaryTree<T> {
     pub fn new() -> Self {
         BinaryTree { head: None }
     }
@@ -174,13 +175,7 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
                     left_min = BinaryTree::sub_min(&bst_node.left, &bst_node.value).unwrap();
                     right_min = BinaryTree::sub_min(&bst_node.right, &bst_node.value).unwrap();
 
-                    let cmp = natural();
-
-                    match cmp.compare(left_min, right_min) {
-                        Less => Ok(left_min),
-                        Equal => Ok(left_min),
-                        Greater => Ok(right_min),
-                    } 
+                    Ok(BinaryTree::lesser_node(left_min, right_min))
                 }
                 else { Ok(&min) }
             },
@@ -198,13 +193,7 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
                     left_min = BinaryTree::sub_min_with_limit(&bst_node.left, &bst_node.value, bottom_limit).unwrap();
                     right_min = BinaryTree::sub_min_with_limit(&bst_node.right, &bst_node.value, bottom_limit).unwrap();
 
-                    let cmp = natural();
-
-                    match cmp.compare(left_min, right_min) {
-                        Less => Ok(left_min),
-                        Equal => Ok(left_min),
-                        Greater => Ok(right_min),
-                    } 
+                    Ok(BinaryTree::lesser_node(left_min, right_min))
                 }
                 else {  BinaryTree::sub_min_with_limit(&bst_node.right, min, bottom_limit) }
             }
@@ -218,6 +207,16 @@ impl<T: PartialOrd + Display + Ord> BinaryTree<T> {
             right: None,
             left: None,
         })
+    }
+
+    fn lesser_node<'a>(node: &'a T, other_node: &'a T) -> &'a T {
+        let cmp = natural();
+
+        match cmp.compare(node, other_node) {
+            Less => node,
+            Equal => node,
+            Greater => other_node,
+        } 
     }
 }
 
