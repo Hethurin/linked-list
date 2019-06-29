@@ -25,6 +25,7 @@ impl Error for NullError {}
 
 pub struct LinkedList<T> {
     head: Link<T>,
+    count: usize,
 }
 
 type Link<T> = Option<Box<Node<T>>>;
@@ -36,14 +37,14 @@ struct Node<T> {
 
 impl<T> LinkedList<T> {
     pub fn new() -> Self {
-        LinkedList { head: None }
+        LinkedList { 
+            head: None,
+            count: 0, 
+        }
     }
 
     pub fn is_empty(&self) -> bool {
-        match &self.head {
-            Some(node) => false,
-            None => true,
-        }
+        self.count > 0
     }
 
     pub fn push(&mut self, value: T) {
@@ -53,6 +54,11 @@ impl<T> LinkedList<T> {
         });
 
         self.head = Some(new_node);
+        self.count = self.count + 1;
+    }
+
+    pub fn count(&self) -> &usize {
+        &self.count
     }
 
     pub fn pop(&mut self) -> Option<T> {
@@ -200,6 +206,13 @@ impl<T: PartialOrd + Ord> BinaryTree<T> {
         }
     }
 
+    //WIP
+    //Creates linked list with references to binary search tree ordered from min to max
+    //Iterator workaround
+    pub fn flatten(&self) -> LinkedList<&T> {
+        LinkedList::new()
+    }
+
     fn generate_node(value: T) -> Box<BinaryTreeNode<T>> {
         Box::new(BinaryTreeNode {
             value: value,
@@ -231,6 +244,14 @@ mod tests {
         list.push(32);
 
         assert_eq!(list.pop(), Some(32));
+    }
+
+    #[test]
+    fn list_node_count() {
+        let mut list:LinkedList<i32> = LinkedList::new();
+        list.push(32); list.push(32); list.push(32);
+
+        assert_eq!(list.count(), &3);
     }
 
     #[test]
