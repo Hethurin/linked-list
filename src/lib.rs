@@ -61,6 +61,40 @@ impl<T> LinkedList<T> {
         &self.count
     }
 
+    //WIP - need to get to the end of self or list!
+    pub fn merge(&mut self, mut list: LinkedList<T>) {
+        match list.head {
+            None => {},
+            Some(list_node) => {
+                let mut last = LinkedList::last(list.head);
+
+                match last {
+                    Err(NullError) => {},
+                    Ok(node) => {
+                        node.unwrap().next = list.head;
+                        self.count = self.count + list.count;
+                    }
+                }
+            }
+        }
+    }
+
+    fn last(head: Link<T>) -> Result<Link<T>, NullError> {
+        let mut current_link = head;
+
+        match current_link {
+            None => Err(NullError{}),
+            Some(node) => {
+                loop {
+                    match node.next {
+                        None => return Ok(current_link),
+                        Some(node) => current_link = node.next,
+                    }
+                }
+            }
+        }
+    }
+
     pub fn pop(&mut self) -> Option<T> {
         match std::mem::replace(&mut self.head, None) {
             None => None,
@@ -252,6 +286,31 @@ mod tests {
         list.push(32); list.push(32); list.push(32);
 
         assert_eq!(list.count(), &3);
+    }
+
+    #[test]
+    fn last_node() {
+        let mut list:LinkedList<i32> = LinkedList::new();
+        list.push(32); list.push(33); list.push(34);
+
+        match list.last() {
+            None => { panic!("Getting last list node is not working") },
+            Some(node) => { assert_eq!(node.value,&32) },
+        }
+    }
+
+    #[test]
+    fn list_merge() {
+        let mut legacy:LinkedList<i32> = LinkedList::new();
+        let mut hype:LinkedList<i32> = LinkedList::new();
+
+        legacy.push(1); hype.push(2); hype.push(3);
+        legacy.merge(hype);
+
+        let mut legacy_iter = legacy.iter();
+        assert_eq!(legacy_iter.next(), Some(&1));
+        assert_eq!(legacy_iter.next(), Some(&2));
+        assert_eq!(legacy.count, &3);
     }
 
     #[test]
