@@ -26,6 +26,7 @@ impl Error for NullError {}
 pub struct LinkedList<T> {
     head: Link<T>,
     count: usize,
+    last: Link<T>,
 }
 
 type Link<T> = Option<Box<Node<T>>>;
@@ -40,6 +41,7 @@ impl<T> LinkedList<T> {
         LinkedList { 
             head: None,
             count: 0, 
+            last: None,
         }
     }
 
@@ -55,55 +57,39 @@ impl<T> LinkedList<T> {
 
         self.head = Some(new_node);
         self.count = self.count + 1;
+        self.last = new_node.next;
     }
 
     pub fn count(&self) -> &usize {
         &self.count
     }
 
-    //WIP - need to get to the end of self or list!
-    pub fn merge(&mut self, mut list: LinkedList<T>) {
-        match list.head {
-            None => {},
+    //WIP - rewrite into sane function
+    pub fn merge(&mut self, list: LinkedList<T>) {
+        match &list.head {
+            None => return,
             Some(list_node) => {
-                let mut last = LinkedList::last(list.head);
-
-                match last {
-                    Err(NullError) => {},
-                    Ok(node) => {
-                        node.unwrap().next = list.head;
+                match &self.last {
+                    None => return,
+                    Some(node) => {
+                        node.next = list.head;
                         self.count = self.count + list.count;
-                    }
+                    },
                 }
-            }
+            },
         }
     }
 
-    fn last(head: Link<T>) -> Result<Link<T>, NullError> {
-        let mut current_link = head;
-
-        match current_link {
-            None => Err(NullError{}),
-            Some(node) => {
-                loop {
-                    match node.next {
-                        None => return Ok(current_link),
-                        Some(node) => current_link = node.next,
-                    }
-                }
-            }
-        }
-    }
-
+    //WIP - modify last accordingly
     pub fn pop(&mut self) -> Option<T> {
         match std::mem::replace(&mut self.head, None) {
             None => None,
             Some(node) => {
                 self.head = node.next;
+                self.count = self.count - 1;
                 Some(node.value)
-            }
+            },
         }
-
     }
     
     pub fn iter(&self) -> Iter<'_, T> {
@@ -293,9 +279,9 @@ mod tests {
         let mut list:LinkedList<i32> = LinkedList::new();
         list.push(32); list.push(33); list.push(34);
 
-        match list.last() {
-            None => { panic!("Getting last list node is not working") },
-            Some(node) => { assert_eq!(node.value,&32) },
+        match list.last {
+            None => panic!("Getting last list node is not working"),
+            Some(node) => assert_eq!(node.value, &32),
         }
     }
 
