@@ -26,7 +26,6 @@ impl Error for NullError {}
 pub struct LinkedList<T> {
     head: Link<T>,
     count: usize,
-    last: Link<T>,
 }
 
 type Link<T> = Option<Box<Node<T>>>;
@@ -41,7 +40,6 @@ impl<T> LinkedList<T> {
         LinkedList { 
             head: None,
             count: 0, 
-            last: None,
         }
     }
 
@@ -57,30 +55,12 @@ impl<T> LinkedList<T> {
 
         self.head = Some(new_node);
         self.count = self.count + 1;
-        self.last = new_node.next;
     }
 
     pub fn count(&self) -> &usize {
         &self.count
     }
 
-    //WIP - rewrite into sane function
-    pub fn merge(&mut self, list: LinkedList<T>) {
-        match &list.head {
-            None => return,
-            Some(list_node) => {
-                match &self.last {
-                    None => return,
-                    Some(node) => {
-                        node.next = list.head;
-                        self.count = self.count + list.count;
-                    },
-                }
-            },
-        }
-    }
-
-    //WIP - modify last accordingly
     pub fn pop(&mut self) -> Option<T> {
         match std::mem::replace(&mut self.head, None) {
             None => None,
