@@ -127,7 +127,7 @@ struct BinaryTreeNode<T> {
     left: BinaryTreeLink<T>,
 }
 
-impl<T: PartialOrd + Ord> BinaryTree<T> {
+impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
     pub fn new() -> Self {
         BinaryTree { head: None }
     }
@@ -209,8 +209,22 @@ impl<T: PartialOrd + Ord> BinaryTree<T> {
     //WIP
     //Creates linked list with references to binary search tree ordered from min to max
     //Iterator workaround
-    pub fn flatten(&self) -> LinkedList<&T> {
-        LinkedList::new()
+    pub fn flatten(&self) -> LinkedList<T> {
+        let mut flattened_bst = LinkedList::new();
+
+        BinaryTree::sub_flatten(&self.head, &mut flattened_bst);
+        flattened_bst
+    }
+
+    fn sub_flatten(start: &BinaryTreeLink<T>, list: &mut LinkedList<T>) {
+        match start {
+            None => {},
+            Some(node) => {
+                BinaryTree::sub_flatten(&node.left, list);
+                list.push(node.value.clone());
+                BinaryTree::sub_flatten(&node.right, list);
+            },
+        }
     }
 
     fn generate_node(value: T) -> Box<BinaryTreeNode<T>> {
@@ -252,31 +266,6 @@ mod tests {
         list.push(32); list.push(32); list.push(32);
 
         assert_eq!(list.count(), &3);
-    }
-
-    #[test]
-    fn last_node() {
-        let mut list:LinkedList<i32> = LinkedList::new();
-        list.push(32); list.push(33); list.push(34);
-
-        match list.last {
-            None => panic!("Getting last list node is not working"),
-            Some(node) => assert_eq!(node.value, &32),
-        }
-    }
-
-    #[test]
-    fn list_merge() {
-        let mut legacy:LinkedList<i32> = LinkedList::new();
-        let mut hype:LinkedList<i32> = LinkedList::new();
-
-        legacy.push(1); hype.push(2); hype.push(3);
-        legacy.merge(hype);
-
-        let mut legacy_iter = legacy.iter();
-        assert_eq!(legacy_iter.next(), Some(&1));
-        assert_eq!(legacy_iter.next(), Some(&2));
-        assert_eq!(legacy.count, &3);
     }
 
     #[test]
