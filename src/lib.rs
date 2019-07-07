@@ -206,9 +206,10 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
         }
     }
 
-    //WIP
-    //Creates linked list with references to binary search tree ordered from min to max
     //Iterator workaround
+    //Creates linked list with references to binary search tree ordered from min to max
+    //To achieve this Binary tree traversal is done in Reverse order 
+    //Because LinkedList push implementation adds new nodes atop, not in the end of List
     pub fn flatten(&self) -> LinkedList<T> {
         let mut flattened_bst = LinkedList::new();
 
@@ -220,9 +221,9 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
         match start {
             None => {},
             Some(node) => {
-                BinaryTree::sub_flatten(&node.left, list);
-                list.push(node.value.clone());
                 BinaryTree::sub_flatten(&node.right, list);
+                list.push(node.value.clone());
+                BinaryTree::sub_flatten(&node.left, list);
             },
         }
     }
@@ -323,5 +324,20 @@ mod tests {
             Ok(min) => assert_eq!(min, &20),
             Err(err) => panic!("Next min value search is not working, {}", err),
         }
+    }
+
+    #[test]
+    fn bst_iter() {
+        let mut bst = BinaryTree::new();
+        bst.push(5); bst.push(6); bst.push(17); bst.push(10); bst.push(2);
+
+        let flat_bst = bst.flatten();
+        let mut flat_bst_iter = flat_bst.iter();
+
+        assert_eq!(flat_bst_iter.next(), Some(&2));
+        assert_eq!(flat_bst_iter.next(), Some(&5));
+        assert_eq!(flat_bst_iter.next(), Some(&6));
+        assert_eq!(flat_bst_iter.next(), Some(&10));
+        assert_eq!(flat_bst_iter.next(), Some(&17));
     }
 }
