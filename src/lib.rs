@@ -25,6 +25,7 @@ impl Error for NullError {}
 
 pub struct LinkedList<T> {
     head: Link<T>,
+    count: usize,
 }
 
 type Link<T> = Option<Box<Node<T>>>;
@@ -36,14 +37,14 @@ struct Node<T> {
 
 impl<T> LinkedList<T> {
     pub fn new() -> Self {
-        LinkedList { head: None }
+        LinkedList { 
+            head: None,
+            count: 0, 
+        }
     }
 
     pub fn is_empty(&self) -> bool {
-        match &self.head {
-            Some(node) => false,
-            None => true,
-        }
+        self.count > 0
     }
 
     pub fn push(&mut self, value: T) {
@@ -53,6 +54,11 @@ impl<T> LinkedList<T> {
         });
 
         self.head = Some(new_node);
+        self.count = self.count + 1;
+    }
+
+    pub fn count(&self) -> &usize {
+        &self.count
     }
 
     pub fn pop(&mut self) -> Option<T> {
@@ -60,10 +66,10 @@ impl<T> LinkedList<T> {
             None => None,
             Some(node) => {
                 self.head = node.next;
+                self.count = self.count - 1;
                 Some(node.value)
-            }
+            },
         }
-
     }
     
     pub fn iter(&self) -> Iter<'_, T> {
@@ -121,7 +127,7 @@ struct BinaryTreeNode<T> {
     left: BinaryTreeLink<T>,
 }
 
-impl<T: PartialOrd + Ord> BinaryTree<T> {
+impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
     pub fn new() -> Self {
         BinaryTree { head: None }
     }
@@ -139,6 +145,13 @@ impl<T: PartialOrd + Ord> BinaryTree<T> {
             Some(bst_node) => BinaryTree::insert(bst_node, value),
         }
         
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match &self.head {
+            None => true,
+            Some(node) => false,
+        }
     }
 
     fn insert(node: &mut BinaryTreeNode<T>, value: T) {
@@ -182,21 +195,25 @@ impl<T: PartialOrd + Ord> BinaryTree<T> {
         }
     }
 
-    fn sub_min_with_limit<'a>(head: &'a BinaryTreeLink<T>, min: &'a T, bottom_limit: &T) -> Result<&'a T, NullError> {
-        let left_min: &T;
-        let right_min: &T;
-        
-        match &head { 
-            None => Ok(&min),
-            Some(bst_node) => {
-                if &bst_node.value > bottom_limit { 
-                    left_min = BinaryTree::sub_min_with_limit(&bst_node.left, &bst_node.value, bottom_limit).unwrap();
-                    right_min = BinaryTree::sub_min_with_limit(&bst_node.right, &bst_node.value, bottom_limit).unwrap();
+    //Iterator workaround
+    //Creates linked list with references to binary search tree ordered from min to max
+    //To achieve this, Binary tree traversal is done in Reverse order 
+    //Because LinkedList push implementation adds new nodes atop, not at the end of List
+    pub fn flatten(&self) -> LinkedList<T> {
+        let mut flattened_bst = LinkedList::new();
 
-                    Ok(BinaryTree::lesser_node(left_min, right_min))
-                }
-                else {  BinaryTree::sub_min_with_limit(&bst_node.right, min, bottom_limit) }
-            }
+        BinaryTree::sub_flatten(&self.head, &mut flattened_bst);
+        flattened_bst
+    }
+
+    fn sub_flatten(start: &BinaryTreeLink<T>, list: &mut LinkedList<T>) {
+        match start {
+            None => {},
+            Some(node) => {
+                BinaryTree::sub_flatten(&node.right, list);
+                list.push(node.value.clone());
+                BinaryTree::sub_flatten(&node.left, list);
+            },
         }
     }
 
@@ -234,6 +251,14 @@ mod tests {
     }
 
     #[test]
+    fn list_node_count() {
+        let mut list:LinkedList<i32> = LinkedList::new();
+        list.push(32); list.push(32); list.push(32);
+
+        assert_eq!(list.count(), &3);
+    }
+
+    #[test]
     fn iter_list() {
         let mut list:LinkedList<i32> = LinkedList::new();
         list.push(32); list.push(-4);
@@ -265,28 +290,18 @@ mod tests {
         }
     }
 
-    //remove later
     #[test]
-    fn find_next_min_value_in_bst() {
+    fn bst_iter() {
         let mut bst = BinaryTree::new();
         bst.push(5); bst.push(6); bst.push(17); bst.push(10); bst.push(2);
 
-        match BinaryTree::sub_min_with_limit(&bst.head, &5, &5) {
-            Ok(min) => assert_eq!(min, &6),
-            Err(err) => panic!("Next min value search is not working, {}", err),
-        }
-    }
+        let flat_bst = bst.flatten();
+        let mut flat_bst_iter = flat_bst.iter();
 
-    #[test]
-    fn find_min_value_in_bst_complex() {
-        let mut bst = BinaryTree::new();
-        bst.push(20); bst.push(15); bst.push(17); bst.push(16); bst.push(19);
-        bst.push(9); bst.push(12); bst.push(10); bst.push(6); bst.push(5);
-        bst.push(21); bst.push(25); bst.push(23); bst.push(28); bst.push(40);
-
-        match BinaryTree::sub_min_with_limit(&bst.head, &19, &19) {
-            Ok(min) => assert_eq!(min, &20),
-            Err(err) => panic!("Next min value search is not working, {}", err),
-        }
+        assert_eq!(flat_bst_iter.next(), Some(&2));
+        assert_eq!(flat_bst_iter.next(), Some(&5));
+        assert_eq!(flat_bst_iter.next(), Some(&6));
+        assert_eq!(flat_bst_iter.next(), Some(&10));
+        assert_eq!(flat_bst_iter.next(), Some(&17));
     }
 }
