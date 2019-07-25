@@ -290,31 +290,6 @@ mod tests {
         }
     }
 
-    //remove later
-    #[test]
-    fn find_next_min_value_in_bst() {
-        let mut bst = BinaryTree::new();
-        bst.push(5); bst.push(6); bst.push(17); bst.push(10); bst.push(2);
-
-        match BinaryTree::sub_min_with_limit(&bst.head, &5, &5) {
-            Ok(min) => assert_eq!(min, &6),
-            Err(err) => panic!("Next min value search is not working, {}", err),
-        }
-    }
-
-    #[test]
-    fn find_min_value_in_bst_complex() {
-        let mut bst = BinaryTree::new();
-        bst.push(20); bst.push(15); bst.push(17); bst.push(16); bst.push(19);
-        bst.push(9); bst.push(12); bst.push(10); bst.push(6); bst.push(5);
-        bst.push(21); bst.push(25); bst.push(23); bst.push(28); bst.push(40);
-
-        match BinaryTree::sub_min_with_limit(&bst.head, &19, &19) {
-            Ok(min) => assert_eq!(min, &20),
-            Err(err) => panic!("Next min value search is not working, {}", err),
-        }
-    }
-
     #[test]
     fn bst_iter() {
         let mut bst = BinaryTree::new();
