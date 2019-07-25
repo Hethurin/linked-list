@@ -147,13 +147,6 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
         
     }
 
-    pub fn is_empty(&self) -> bool {
-        match &self.head {
-            None => true,
-            Some(node) => false,
-        }
-    }
-
     fn insert(node: &mut BinaryTreeNode<T>, value: T) {
         if node.value > value {
             match &mut node.left {
@@ -213,6 +206,42 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
                 BinaryTree::sub_flatten(&node.right, list);
                 list.push(node.value.clone());
                 BinaryTree::sub_flatten(&node.left, list);
+            },
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match &self.head {
+            None => true,
+            Some(node) => false,
+        }
+    }
+
+    //returns NullError if value is missing from Binary Tree
+    //or a reference to a value if it was found
+    pub fn find<'a>(&'a self, value: &'a T) -> Result<&'a T, NullError> {
+        match &self.head {
+            None => Err(NullError{}),
+            Some(node) => BinaryTree::sub_find(&node, value),
+        }
+    }
+
+    fn sub_find<'a>(start: &'a BinaryTreeNode<T>, value: &'a T) -> Result<&'a T, NullError> {
+        let cmp = natural();
+        
+        match cmp.compare(&start.value, value) {
+            Less => {
+                match &start.right {
+                    None => return Err(NullError{}),
+                    Some(node) => BinaryTree::sub_find(node, value),
+                }
+            },
+            Equal => Ok(&start.value),
+            Greater => {
+                match &start.left {
+                    None => return Err(NullError{}),
+                    Some(node) => BinaryTree::sub_find(node, value),
+                }
             },
         }
     }
@@ -303,5 +332,18 @@ mod tests {
         assert_eq!(flat_bst_iter.next(), Some(&6));
         assert_eq!(flat_bst_iter.next(), Some(&10));
         assert_eq!(flat_bst_iter.next(), Some(&17));
+    }
+
+    #[test]
+    fn find_node_in_bst() {
+        let mut bst = BinaryTree::new();
+        bst.push(5); bst.push(4); bst.push(18);
+
+        let node = bst.find(&18);
+
+        match node {
+            Err(err) => panic!("Existing node was not found!, {}", err),
+            Ok(node) => assert_eq!(node, &18),
+        }
     }
 }
