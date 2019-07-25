@@ -147,6 +147,13 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
         
     }
 
+    pub fn is_empty(&self) -> bool {
+        match &self.head {
+            None => true,
+            Some(node) => false,
+        }
+    }
+
     fn insert(node: &mut BinaryTreeNode<T>, value: T) {
         if node.value > value {
             match &mut node.left {
@@ -188,28 +195,10 @@ impl<T: PartialOrd + Ord + Clone> BinaryTree<T> {
         }
     }
 
-    fn sub_min_with_limit<'a>(head: &'a BinaryTreeLink<T>, min: &'a T, bottom_limit: &T) -> Result<&'a T, NullError> {
-        let left_min: &T;
-        let right_min: &T;
-        
-        match &head { 
-            None => Ok(&min),
-            Some(bst_node) => {
-                if &bst_node.value > bottom_limit { 
-                    left_min = BinaryTree::sub_min_with_limit(&bst_node.left, &bst_node.value, bottom_limit).unwrap();
-                    right_min = BinaryTree::sub_min_with_limit(&bst_node.right, &bst_node.value, bottom_limit).unwrap();
-
-                    Ok(BinaryTree::lesser_node(left_min, right_min))
-                }
-                else {  BinaryTree::sub_min_with_limit(&bst_node.right, min, bottom_limit) }
-            }
-        }
-    }
-
     //Iterator workaround
     //Creates linked list with references to binary search tree ordered from min to max
-    //To achieve this Binary tree traversal is done in Reverse order 
-    //Because LinkedList push implementation adds new nodes atop, not in the end of List
+    //To achieve this, Binary tree traversal is done in Reverse order 
+    //Because LinkedList push implementation adds new nodes atop, not at the end of List
     pub fn flatten(&self) -> LinkedList<T> {
         let mut flattened_bst = LinkedList::new();
 
